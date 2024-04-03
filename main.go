@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/chrissexton/goradient/value"
+	"github.com/chrissexton/gograd/value"
 )
 
 func main() {

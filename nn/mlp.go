@@ -2,7 +2,7 @@ package nn
 
 import (
 	"fmt"
-	"github.com/chrissexton/goradient/value"
+	"github.com/chrissexton/gograd/value"
 	"strings"
 )
 
