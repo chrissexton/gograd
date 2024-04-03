@@ -2,6 +2,7 @@ package value
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"slices"
 	"strings"
@@ -45,15 +46,39 @@ func (v *Value) setBackward(f func()) {
 	v.backward = f
 }
 
+func (v *Value) AddF(other float64) *Value {
+	return v.Add(New(other, ""))
+}
+
+func (v *Value) AddI(other int) *Value {
+	return v.Add(New(float64(other), ""))
+}
+
 func (v *Value) Add(other *Value) *Value {
 	out := New(v.data+other.data, "+")
 	out.setOp("+")
 	out.setBackward(func() {
-		v.grad += v.grad + out.grad
-		other.grad += other.grad + out.grad
+		v.grad += 1 * out.grad
+		other.grad += 1 * out.grad
 	})
 	out.setPrev(v, other)
 	return out
+}
+
+func (v *Value) Neg() *Value {
+	return v.MulI(-1)
+}
+
+func (v *Value) Sub(other *Value) *Value {
+	return v.Add(other.Neg())
+}
+
+func (v *Value) MulF(other float64) *Value {
+	return v.Mul(New(other, ""))
+}
+
+func (v *Value) MulI(other int) *Value {
+	return v.Mul(New(float64(other), ""))
 }
 
 func (v *Value) Mul(other *Value) *Value {
@@ -67,11 +92,26 @@ func (v *Value) Mul(other *Value) *Value {
 	return out
 }
 
+func (v *Value) Div(other *Value) *Value {
+	return v.Mul(other.Pow(New(-1, "**-1")))
+}
+
 func (v *Value) Pow(other *Value) *Value {
 	out := New(math.Pow(v.data, other.data), "^")
-	out.setOp(fmt.Sprintf("^%.2f", other))
+	out.setOp(fmt.Sprintf("^%.2f", other.data))
 	out.setBackward(func() {
 		v.grad += other.data * math.Pow(v.data, other.data-1) * out.grad
+	})
+	out.setPrev(v)
+	return out
+}
+
+func (v *Value) Exp() *Value {
+	out := New(math.Exp(v.data), "exp")
+	out.setOp("exp")
+	out.setBackward(func() {
+		log.Printf("expSetBackward: %.2f += %.2f * %.2f = %.2f", v.grad, out.data, out.grad, v.grad+out.data*out.grad)
+		v.grad = out.data * out.grad
 	})
 	out.setPrev(v)
 	return out
